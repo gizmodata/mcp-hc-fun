@@ -1,4 +1,4 @@
-# Ask Baseball Questions with Claude, Hardcharger, and a Cluster That Wakes Up on Demand
+# Ask Data Questions with Claude, Hardcharger, and a Cluster That Wakes Up on Demand
 
 *From two CSV files to persistent cloud tables, conversational SQL, and compute that stops when you stop using it.*
 
@@ -238,6 +238,9 @@ For a managed Hardcharger cluster, the simplest current route is the **hosted Gi
 ### Recommended: hosted connector with browser sign-in
 
 1. In GizmoData Cloud, open **AI Assistants** and review the connection instructions.
+
+![AI Assitant](./images/AI-Assistants.png)
+
 2. On the cluster's AI Assistants settings, ensure **Available to AI assistants** is enabled. Leave changes disabled for this read-only exploration.
 3. In Claude Desktop, open the connectors area, currently **Customize → Connectors**, and choose **Add custom connector**. Team or Enterprise accounts may require an administrator to add it first.
 4. Name it `GizmoData Cloud` and enter this remote MCP URL:
@@ -245,6 +248,8 @@ For a managed Hardcharger cluster, the simplest current route is the **hosted Gi
    ```text
    https://mcp.gizmodata.com/mcp
    ```
+
+![Custom Connector](./images/connector.png)
 
 5. Connect and complete the GizmoData Cloud browser sign-in.
 6. Enable the connector for the conversation and review tool permissions.
@@ -272,7 +277,7 @@ The extension marks credentials as sensitive and stores them in the operating sy
 
 Start by giving Claude clear boundaries:
 
-> Use the GizmoData Cloud connector and select the `bold-eagle-240` cluster. Inspect `baseball.main.people` and `baseball.main.batting`. Use read-only queries, show me the SQL, and do not invent columns or results.
+> Use the GizmoData Cloud connector and select the `<your cluster name>` cluster. Inspect `baseball.main.people` and `baseball.main.batting`. Use read-only queries, show me the SQL, and do not invent columns or results.
 
 Tool names differ between the hosted connector and local extension, so the important thing is the workflow: discover the schema, execute SQL, and explain the returned results.
 
@@ -336,6 +341,10 @@ ORDER BY
 LIMIT 10;
 ```
 
+![Hardcharger web UI login screen](./images/highest-ba-2024.png)
+
+![Hardcharger web UI login screen](./images/claud-high-ba-2024.png)
+
 Notice that we sort by the unrounded average, not the displayed three-decimal value.
 
 ### Question 3: Show a player's career over time
@@ -355,7 +364,6 @@ ORDER BY yearID;
 
 The point is not to stop thinking about SQL. It is to shorten the path from a question to a query you can inspect and reproduce.
 
-**Screenshots to capture:** The prompt, actual tool execution, SQL, and returned results. The 2024 and year-by-year examples above are suggested queries; add their output only after running them.
 
 ## 7. The fun part: let the cluster sleep, then ask another question
 
@@ -371,39 +379,28 @@ Our cluster has three related but distinct settings:
 
 The 60-minute timer is not an idle timer. Its clock restarts each time the cluster starts.
 
-### Record the end-to-end sequence
+### Run same experiment, end-to-end
 
 1. Run a small query through Claude to confirm the MCP connection works.
 2. Stop issuing SQL. Pause other clients, scheduled jobs, or refreshes that could keep the cluster active.
 3. Wait for the idle window and confirm the portal shows **stopped**. Leave enough time for shutdown to finish.
+
+![Hardcharger web UI login screen](./images/claude-not-running.png)
+
 4. In Claude, ask:
 
    > Run a fresh query against `baseball.main.batting` on `bold-eagle-240` and tell me how many rows it contains. Do not reuse the answer from our earlier conversation.
 
 5. Approve the tool call if prompted.
 6. Watch the cluster start, wait for the query to complete, and capture the returned count: **128,598**.
+
+![Hardcharger web UI login screen](./images/cluster-starting.png)
+
 7. Confirm that the tables are still available without reimporting either CSV.
 
 The documented behavior is that a valid authenticated connection starts eligible stopped compute, and the hosted MCP connector waits for it to become ready. Invalid credentials do not start the cluster.
 
-The first request is not instantaneous: GizmoData currently describes roughly 30 seconds for shared-compute resume, with startup work and capacity affecting the actual wait. Measure and report the time from the recording rather than treating that estimate as a guarantee.
-
-**Demo storyboard:**
-
-```text
-Query completes
-      |
-      | no qualifying SQL activity for the idle window
-      v
-Cluster stopped; compute charges stop
-      |
-      | Claude makes a fresh authenticated query
-      v
-Cluster resumes; connector waits
-      |
-      v
-Query returns; persistent baseball tables are still there
-```
+The first request is not instantaneous: GizmoData currently describes roughly 30 seconds for shared-compute resume, with startup work and capacity affecting the actual wait.
 
 That is the cool part: I can come back with another baseball question instead of first remembering to turn the database on.
 
@@ -414,8 +411,6 @@ That is the cool part: I can come back with another baseball question instead of
 - Storage persists and is billed separately while compute is stopped. Subscription fees and any other applicable resources do not disappear either.
 - Our shared gateway has no extra endpoint charge. A dedicated load balancer retained for auto-resume can still incur charges while stopped.
 - Data survives because it is in the persistent catalog, not because stopping magically preserves an in-memory database.
-
-**Capture before publication:** A stopped-cluster screenshot, the new Claude tool call, the running state, and the returned result. A sped-up idle-wait segment is fine if it is labeled.
 
 ## What I like about this setup
 
@@ -429,6 +424,10 @@ The stack is easy to reason about:
 - **Idle stop and automatic resume** let compute rest between periods of use.
 
 For a project like this, that last combination is especially appealing: the data stays ready, without requiring the query engine to stay running all day.
+
+# Finally the answer :)
+
+![Hardcharger web UI login screen](./images/10-greatest.png)
 
 ## References
 
