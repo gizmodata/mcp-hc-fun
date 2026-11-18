@@ -1,4 +1,4 @@
-# Local Hardcharger TPC-H SF=1
+# MCP Hardcharger Fun
 
 Uses the official Python ADBC driver to execute SQL over the running desktop
 server's HTTP API. Keep the Hardcharger desktop app running.
