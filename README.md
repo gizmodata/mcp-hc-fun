@@ -1,51 +1,46 @@
-# MCP Hardcharger Fun
+# Baseball Analytics with Claude and Hardcharger
 
-Uses the official Python ADBC driver to execute SQL over the running desktop
-server's HTTP API. Keep the Hardcharger desktop app running.
+This repository contains a blog post and its supporting data and screenshots.
+It follows a baseball analytics project on GizmoData Cloud, using Hardcharger,
+a persistent DuckLake catalog, and Claude Desktop connected through MCP.
 
-## Run
+**[Read the blog post](./baseball-cloud-mcp-blog.md).**
 
-```sh
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python tpch_sf1.py
-```
+## What the walkthrough covers
 
-Enter your server administrator password at the hidden terminal prompt. The
-script does not save it. The default user is `hardcharger`; pass
-`--username YOUR_USER` to change it. Desktop-managed credentials live in the
-operating system's keychain; if needed, configure your administrator credentials
-in the desktop app. Do not paste credentials into chat or source files.
+1. Creating a small Hardcharger cluster on GizmoData Cloud.
+2. Creating and attaching a persistent `baseball` DuckLake catalog.
+3. Importing player information and batting statistics into separate tables
+   with the Python ADBC driver.
+4. Querying the data in the Hardcharger web UI.
+5. Connecting Claude Desktop through MCP and asking baseball questions.
+6. Demonstrating idle stop and automatic resume when a supported client
+   queries the stopped cluster.
 
-The connection defaults to
-`hardcharger://127.0.0.1:31337/warp?tls=false`, matching the API advertised by
-this local desktop installation. For a server using the newer Chargewire path:
+The catalog stores the data independently of compute, so the tables survive
+cluster stops and starts.
 
-```sh
-.venv/bin/python tpch_sf1.py --uri 'hardcharger://127.0.0.1:31337?tls=false'
-```
+## Project contents
 
-Unencrypted HTTP is for this local loopback connection only. Use TLS for remote
-servers.
+| File or directory | Purpose |
+|---|---|
+| [baseball-cloud-mcp-blog.md](./baseball-cloud-mcp-blog.md) | Main blog post, setup instructions, import example, and SQL queries |
+| [images/](./images/) | Screenshots used in the post |
+| [People.csv](./People.csv) | Player information, imported as `baseball.main.people` |
+| [Batting.csv](./Batting.csv) | Batting statistics, imported as `baseball.main.batting` |
+| [requirements.txt](./requirements.txt) | Python ADBC driver dependency for the import example |
 
-## Behavior
+Both tables join on `playerID`. The CSV files used in this project contain
+24,270 people and 128,598 batting records.
 
-- Installs and loads DuckDB's `tpch` extension on the server (the initial install
-  may require internet access).
-- Generates SF=1 into the current database's `main` schema in a transaction.
-- Refuses to generate if any of the eight TPC-H table names already exist.
-  If all eight exist, it only verifies them, without appending data.
-- Checks all eight row counts and the documented SF=1 result for TPC-H query 4
-  before committing. Errors propagate; closing the uncommitted connection rolls
-  back changes. Existing tables are never dropped.
-- Data persists in the desktop app's database, not in this project folder.
+## Following along
 
-This is dataset setup and a query smoke test, not a full or official TPC-H
-benchmark run.
+Start with the [blog post](./baseball-cloud-mcp-blog.md) for cluster creation,
+catalog setup, data import, Claude Desktop configuration, and example queries.
+Use your own GizmoData Cloud account and cluster endpoint. Keep passwords,
+API keys, and session tokens out of source files and screenshots.
 
-## References
-
-- [Hardcharger docs](https://docs.hardcharger.gizmodata.com/)
-- [macOS desktop app](https://docs.hardcharger.gizmodata.com/guides/desktop-app/)
-- [Python driver](https://docs.hardcharger.gizmodata.com/clients/python/)
-- [DuckDB TPC-H extension](https://duckdb.org/docs/2.0/core_extensions/tpch.html)
+The data comes from the
+[SABR Lahman Baseball Database](https://sabr.org/lahman-database/), created by
+Sean Lahman. Review its documentation and applicable usage terms for
+attribution and redistribution.
